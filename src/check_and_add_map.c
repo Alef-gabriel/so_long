@@ -6,7 +6,7 @@
 /*   By: algabrie <alefgabrielr@gmail.com>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/06 20:41:31 by algabrie          #+#    #+#             */
-/*   Updated: 2021/11/09 13:37:38 by algabrie         ###   ########.fr       */
+/*   Updated: 2021/12/05 16:16:01 by algabrie         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,22 +24,35 @@ static t_list	*ft_lstnew(char content, int x, int y)
 	return (p);
 }
 
+static t_list	*ft_clean_list(t_list *pos)
+{
+	t_list	*p;
+
+	while (pos)
+	{
+		p = pos;
+		pos = pos->next;
+		free(p);
+	}
+	return (NULL);
+}
+
 static t_list	*add_in_struct(char s, t_list *pos, int x, int y)
 {
 	static t_list	*var = NULL;
 
-	if (s != '1'&& s != 'E' && s != 'P' && s != 'C' && s != '0')
-		return (NULL); //creat function to delete the struct
-	if (s != '0')
+	if (var == NULL)
 	{
-		if (var == NULL)
-		{
-			var = ft_lstnew(s, x, y);
-			return (var);
-		}
+		var = ft_lstnew(s, x, y);
+		pos = var;
+	}
+	else
+	{
 		var -> next = ft_lstnew(s, x, y);
 		var = var -> next;
 	}
+	if (s != '1' && s != 'E' && s != 'P' && s != 'C' && s != '0')
+		pos->content = 'f';
 	return (pos);
 }
 
@@ -57,44 +70,42 @@ static t_list	*verify_elements_in_struct(t_list *pos)
 	while (pos)
 	{
 		if (pos->content == 'P')
-			p = 1;
+			p++;
 		if (pos->content == 'C')
 			c = 1;
 		if (pos->content == 'E')
-			e = 1;
+			e++;
 		pos = pos->next;
 	}
-	if (p && c && e)
-		return(var);
-	return (NULL);
+	if (p == 1 && c && e == 1)
+		return (var);
+	return (ft_clean_list(var));
 }
 
-t_list	*map_validator(char **matrix, t_list *pos)
+t_list	*map_validator(char **matrix, t_list *pos, t_vars *v)
 {
-	#define MAX_ROWS ft_lenmatrix(matrix)
-	#define MAX_COLUMNS ft_strlen(matrix[0])
-	int		crows;
-	int		ccols;
+	int		cr;
+	int		cc;
 
-	crows = 0;
-	while (matrix[++crows])
+	cr = 0;
+	v->row = ft_lenmatrix(matrix);
+	v->coll = ft_strlen(matrix[0]);
+	while (matrix[cr])
 	{
-		ccols = 0;
-		while (matrix[crows][ccols] && matrix[crows][ccols] != '\n')
+		cc = 0;
+		while (matrix[cr][cc] && matrix[cr][cc] != '\n')
 		{
-			if ((crows == 0 || crows == MAX_ROWS - 1) && matrix[crows][ccols] != '1')
-				return (NULL);
-			if (crows != 0 && crows != MAX_ROWS - 1)
-			{
-				pos = add_in_struct(matrix[crows][ccols], pos, crows, ccols);
-				if (pos == NULL || ((ccols == MAX_COLUMNS -2
-						|| ccols == 0)&& matrix[crows][ccols] != '1'))
-					return (NULL);
-			}
-			ccols++;
+			if (((cr == 0 || cr == v->row - 1) && matrix[cr][cc] != '1')
+				|| (pos && pos->content == 'f'))
+				return (ft_clean_list(pos));
+			if (cr != 0 && cr != v->row - 1 && !(cc == v->coll - 2 || cc == 0))
+				pos = add_in_struct(matrix[cr][cc], pos, cr, cc);
+			cc++;
 		}
-		if (ccols != MAX_COLUMNS - 1)
-			return (NULL);
+		if (cc != v->coll - 1 || (pos && pos->content == 'f')
+			|| (matrix[cr][0] != '1' || matrix[cr][v->coll - 2] != '1'))
+			return (ft_clean_list(pos));
+		cr++;
 	}
 	return (verify_elements_in_struct(pos));
 }

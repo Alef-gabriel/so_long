@@ -6,33 +6,54 @@
 /*   By: algabrie <alefgabrielr@gmail.com>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/06 20:41:20 by algabrie          #+#    #+#             */
-/*   Updated: 2021/11/10 08:45:58 by algabrie         ###   ########.fr       */
+/*   Updated: 2021/12/05 14:58:09 by algabrie         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "so_long.h"
 
-void	mount_map(t_vars vars, int map_colls, int map_rows)
+static int	callc(t_list *pos, int map_rows, int map_colls)
 {
-	int		img_widthg;
-	int		img_heightg;
-	void	*imgg;
+	int		i;
+	t_list	*p;
 
-	while (vars.pos)
+	i = 0;
+	if (HEIGHT / map_rows < 34 || WIDTH / map_colls < 34)
 	{
-		vars.pos->height = vars.pos->x * (HEIGHT/ map_rows);
-		vars.pos->width = vars.pos->y * (WIDTH / map_colls);
-		/*
-		if (vars.pos->content == 'P')
-			imgg = mlx_xpm_file_to_image(vars.mlx, "image/1.xpm", &img_widthg, &img_heightg);
-		if (vars.pos->content == 'C')
-			imgg = mlx_xpm_file_to_image(vars.mlx, "image/cplayer.xpm", &img_widthg, &img_heightg);
-		if (vars.pos->content == 'E')
-			imgg = mlx_xpm_file_to_image(vars.mlx, "image/p1.xpm", &img_widthg, &img_heightg);
-		if (vars.pos->content == '1')
-			imgg = mlx_xpm_file_to_image(vars.mlx, "image/wall.xpm", &img_widthg, &img_heightg);
-		mlx_put_image_to_window(vars.mlx, vars.win, imgg, vars.pos->y, vars.pos->x);
-		*/
-		vars.pos = vars.pos->next;
+		ft_write("Erro\nInconpatble line nuber or columns nuber", 1);
+		return (0);
 	}
+	p = pos;
+	while (pos)
+	{
+		if (pos->content == 'C' && pos->y != 1)
+		{
+			i++;
+			p = mont_enemy(pos, p);
+		}
+		pos->x = pos->x * (HEIGHT / map_rows);
+		pos->y = pos->y * (WIDTH / map_colls);
+		pos->put_bool = 1;
+		pos = pos->next;
+	}
+	return (i);
+}
+
+int	mount_map(t_vars *vars)
+{
+	static int	first = 1;
+	int			i;
+
+	if (first == 1)
+	{
+		i = callc(vars->pos, vars->row, vars->coll - 2);
+		if (!(i))
+			finish(vars);
+		vars->coletable = i;
+		first = 0;
+	}
+	static_image(vars, vars->pos);
+	vars->steps = 0;
+	bonus(vars);
+	return (0);
 }
